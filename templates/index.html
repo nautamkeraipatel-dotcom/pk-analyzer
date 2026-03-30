@@ -1,1 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PK Bioavailability Analyzer · @NautamKerai</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600;700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
 
+  <!-- Animated graph-paper background -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-noise" aria-hidden="true"></div>
+
+  <!-- ─── HEADER ──────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-block">
+        <span class="logo-rx">℞</span>
+        <div class="logo-text">
+          <span class="logo-title">PK Analyzer</span>
+          <span class="logo-sub">Pharmacokinetic · Bioavailability · Analysis System</span>
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="badge-dot"></span>
+        <span>@NautamKerai</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── MAIN ─────────────────────────────────────────────────────── -->
+  <main class="main-grid">
+
+    <!-- LEFT: FORM COLUMN -->
+    <section class="form-column">
+
+      <!-- Drug Info Card -->
+      <div class="card" id="card-drug">
+        <div class="card-header">
+          <span class="card-icon">💊</span>
+          <h2>Drug Information</h2>
+        </div>
+        <div class="card-body">
+          <div class="field-group">
+            <label for="drug_name">Drug Name</label>
+            <input type="text" id="drug_name" placeholder="e.g. Amoxicillin" autocomplete="off" />
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label for="mec">MEC <span class="unit">(mg/L)</span></label>
+              <input type="number" id="mec" placeholder="0 = skip" step="any" min="0" value="0" />
+            </div>
+            <div class="field-group">
+              <label for="msc">MSC <span class="unit">(mg/L)</span></label>
+              <input type="number" id="msc" placeholder="0 = skip" step="any" min="0" value="0" />
+            </div>
+          </div>
+          <p class="hint">Set both MEC &amp; MSC &gt; 0 to display the therapeutic window.</p>
+        </div>
+      </div>
+
+      <!-- Route 1 Card -->
+      <div class="card" id="card-r1">
+        <div class="card-header r1-accent">
+          <span class="card-icon">🔴</span>
+          <h2>Primary Route</h2>
+        </div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field-group flex-2">
+              <label for="route1_name">Route Name</label>
+              <input type="text" id="route1_name" placeholder="e.g. Oral, Drug A" autocomplete="off" />
+            </div>
+            <div class="field-group flex-1">
+              <label for="dose1">Dose <span class="unit">(mg)</span></label>
+              <input type="number" id="dose1" placeholder="500" step="any" min="0" />
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="time1_str">Time Points <span class="unit">(hours — space or comma separated)</span></label>
+            <textarea id="time1_str" rows="2" placeholder="0 0.5 1 2 4 6 8 12 24"></textarea>
+          </div>
+          <div class="field-group">
+            <label for="conc1_str">Plasma Concentrations <span class="unit">(mg/L — same order as time)</span></label>
+            <textarea id="conc1_str" rows="2" placeholder="0 2.3 5.1 8.4 7.2 5.0 3.1 1.2 0.2"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Second route toggle -->
+      <div class="toggle-row">
+        <label class="toggle-label" for="second_toggle">
+          Compare with a Second Route?
+        </label>
+        <button class="toggle-btn" id="second_toggle" aria-pressed="false" type="button">
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
+          <span class="toggle-text">OFF</span>
+        </button>
+      </div>
+
+      <!-- Route 2 Card (hidden by default) -->
+      <div class="card" id="card-r2" aria-hidden="true">
+        <div class="card-header r2-accent">
+          <span class="card-icon">🔵</span>
+          <h2>Secondary Route</h2>
+        </div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field-group flex-2">
+              <label for="route2_name">Route Name</label>
+              <input type="text" id="route2_name" placeholder='e.g. IV, Drug B — use "IV" for bioavailability calc' autocomplete="off" />
+            </div>
+            <div class="field-group flex-1">
+              <label for="dose2">Dose <span class="unit">(mg)</span></label>
+              <input type="number" id="dose2" placeholder="100" step="any" min="0" />
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="time2_str">Time Points <span class="unit">(hours)</span></label>
+            <textarea id="time2_str" rows="2" placeholder="0 0.25 0.5 1 2 4 6 8 12"></textarea>
+          </div>
+          <div class="field-group">
+            <label for="conc2_str">Plasma Concentrations <span class="unit">(mg/L)</span></label>
+            <textarea id="conc2_str" rows="2" placeholder="0 8.5 7.2 6.1 4.3 2.8 1.7 0.9 0.2"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button class="btn-generate" id="btn_generate" type="button">
+        <span class="btn-icon">⚗</span>
+        <span class="btn-label">Generate Analysis</span>
+        <span class="btn-shimmer"></span>
+      </button>
+
+      <!-- Error box -->
+      <div class="error-box" id="error_box" role="alert" aria-live="polite"></div>
+
+    </section>
+
+    <!-- RIGHT: RESULT COLUMN -->
+    <section class="result-column" id="result_column">
+
+      <!-- Idle state -->
+      <div class="result-idle" id="result_idle">
+        <div class="idle-icon">📈</div>
+        <p class="idle-title">Analysis output will appear here</p>
+        <p class="idle-sub">Fill in the form and click <em>Generate Analysis</em></p>
+        <div class="idle-formula">
+          <span>AUC · Ke · t½ · Cl · Vd · F%</span>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div class="result-loading" id="result_loading" aria-hidden="true">
+        <div class="loading-beaker">
+          <div class="beaker-liquid"></div>
+          <div class="bubble b1"></div>
+          <div class="bubble b2"></div>
+          <div class="bubble b3"></div>
+        </div>
+        <p class="loading-text">Crunching pharmacokinetics…</p>
+        <p class="loading-sub">Spline interpolation · Trapezoidal AUC · Log-linear Ke</p>
+        <div class="loading-bar"><div class="loading-fill"></div></div>
+      </div>
+
+      <!-- Result state -->
+      <div class="result-output" id="result_output" aria-hidden="true">
+        <div class="result-toolbar">
+          <span class="result-label" id="result_label">—</span>
+          <button class="btn-download" id="btn_download" type="button">
+            ⬇ Download 1000 DPI
+          </button>
+        </div>
+        <div class="result-img-wrap">
+          <img id="result_img" src="" alt="PK Analysis Chart" />
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ─── FOOTER ────────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <span>PK Bioavailability Analyzer · Built by <strong>@NautamKerai</strong> · GTU B.Pharm Sem 6</span>
+    <span class="footer-sep">·</span>
+    <span>Powered by Flask · Matplotlib · SciPy</span>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
